@@ -246,6 +246,13 @@ if (! defined('APP_NAME')) {
     define('CUSTOM_DESIGN1', 11);
     define('CUSTOM_DESIGN2', 12);
     define('CUSTOM_DESIGN3', 13);
+    define('CUSTOM_DESIGN4', 14);
+    define('CUSTOM_DESIGN5', 15);
+    define('CUSTOM_DESIGN6', 16);
+    define('CUSTOM_DESIGN7', 17);
+    define('CUSTOM_DESIGN8', 18);
+    define('CUSTOM_DESIGN9', 19);
+    define('CUSTOM_DESIGN10', 20);
 
     define('FREQUENCY_WEEKLY', 1);
     define('FREQUENCY_TWO_WEEKS', 2);

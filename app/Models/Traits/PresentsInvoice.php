@@ -383,6 +383,20 @@ trait PresentsInvoice
             return $this->custom_design2;
         } elseif ($designId == CUSTOM_DESIGN3) {
             return $this->custom_design3;
+        } elseif ($designId == CUSTOM_DESIGN4) {
+            return $this->custom_design4;
+        } elseif ($designId == CUSTOM_DESIGN5) {
+            return $this->custom_design5;
+        } elseif ($designId == CUSTOM_DESIGN6) {
+            return $this->custom_design6;
+        } elseif ($designId == CUSTOM_DESIGN7) {
+            return $this->custom_design7;
+        } elseif ($designId == CUSTOM_DESIGN8) {
+            return $this->custom_design8;
+        } elseif ($designId == CUSTOM_DESIGN9) {
+            return $this->custom_design9;
+        } elseif ($designId == CUSTOM_DESIGN10) {
+            return $this->custom_design10;
         }
 
         return null;

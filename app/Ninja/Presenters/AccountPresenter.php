@@ -223,7 +223,7 @@ class AccountPresenter extends Presenter
         $account = $this->entity;
         $data = [];
 
-        for ($i=1; $i<=3; $i++) {
+        for ($i=1; $i<=10; $i++) {
             $label = trans('texts.custom_design' . $i);
             if (! $account->{'custom_design' . $i}) {
                 $label .= ' - ' . trans('texts.empty');
