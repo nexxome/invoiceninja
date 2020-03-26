@@ -16,17 +16,18 @@
 <script type="text/javascript">
 
     @if (Auth::user()->hasPermission('admin'))
-        function loadChart(data) {
-            var ctx = document.getElementById('chart-canvas').getContext('2d');
-            if (window.myChart) {
-                window.myChart.config.data = data;
-                window.myChart.config.options.scales.xAxes[0].time.unit = chartGroupBy.toLowerCase();
-                window.myChart.config.options.scales.xAxes[0].time.round = chartGroupBy.toLowerCase();
-                window.myChart.update();
+        window.myChart = [];
+        function loadChart(data, id) {
+            var ctx = document.getElementById(id).getContext('2d');
+            if (window.myChart[id]) {
+                window.myChart[id].config.data = data;
+                window.myChart[id].config.options.scales.xAxes[0].time.unit = chartGroupBy.toLowerCase();
+                window.myChart[id].config.options.scales.xAxes[0].time.round = chartGroupBy.toLowerCase();
+                window.myChart[id].update();
             } else {
-                $('#progress-div').hide();
-                $('#chart-canvas').fadeIn();
-                window.myChart = new Chart(ctx, {
+                $('.progress-div').hide();
+                $('#'+id).fadeIn();
+                window.myChart[id] = new Chart(ctx, {
                     type: 'line',
                     data: data,
                     options: {
@@ -174,13 +175,28 @@
                 var url = '{{ url('/dashboard_chart_data') }}/' + chartGroupBy + '/' + chartStartDate.format('YYYY-MM-DD') + '/' + chartEndDate.format('YYYY-MM-DD') + '/' + chartCurrencyId + '/' + includeExpenses;
                 $.get(url, function(response) {
                     response = JSON.parse(response);
-                    loadChart(response.data);
+                    loadChart(response.data, 'chart-canvas');
+
+                    var graphDataNet =  $.extend(true, {}, response.data);
+                    $.each( graphDataNet.datasets, function(dataset, data){
+                        if( dataset < 2 ){
+                            graphDataNet.datasets[dataset]['label'] = graphDataNet.datasets[dataset]['label']+' (Netto)';
+                            $.each( data.data, function(key, row){
+                                graphDataNet.datasets[dataset]['data'][key] = graphDataNet.datasets[dataset]['data'][key]/1.19;
+                            });
+                        }
+                    });
+                    loadChart(graphDataNet, 'chart-canvas-net');
 
                     var totals = response.totals;
                     $('.revenue-div').text(formatMoney(totals.revenue, chartCurrencyId, account.country_id));
                     $('.outstanding-div').text(formatMoney(totals.balance, chartCurrencyId, account.country_id));
                     $('.expenses-div').text(formatMoney(totals.expenses, chartCurrencyId, account.country_id));
                     $('.average-div').text(formatMoney(totals.average, chartCurrencyId, account.country_id));
+
+                    $('.revenue-net-div').text(formatMoney(totals.revenue/1.19, chartCurrencyId, account.country_id));
+                    $('.outstanding-net-div').text(formatMoney(totals.balance/1.19, chartCurrencyId, account.country_id));
+                    $('.average-net-div').text(formatMoney(totals.average/1.19, chartCurrencyId, account.country_id));
 
                     $('.currency').hide();
                     $('.currency_' + chartCurrencyId).show();
@@ -254,6 +270,123 @@
 @endif
 
 @if (Auth::user()->hasPermission('admin'))
+<div class="row">
+    <div class="col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-body revenue-panel">
+                <div style="overflow:hidden">
+                    <div class="{{ $headerClass }}">
+                        {{ trans('texts.total_revenue') }} (Netto)
+                    </div>
+                    <div class="revenue-net-div in-bold pull-right" style="color:#337ab7">
+                    </div>
+                    <div class="in-bold">
+                        @if (count($paidToDate))
+                            @foreach ($paidToDate as $item)
+                                <div class="currency currency_{{ $item->currency_id ?: $account->getCurrencyId() }}" style="display:none">
+                                    {{ Utils::formatMoney($item->value/1.19, $item->currency_id) }}
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="currency currency_{{ $account->getCurrencyId() }}" style="display:none">
+                                {{ Utils::formatMoney(0) }}
+                            </div>
+                        @endif
+						<div class="currency currency_blank" style="display:none">
+							&nbsp;
+						</div>
+                    </div>
+					<div class="range-label-div {{ $footerClass }} pull-right" style="color:#337ab7;font-size:16px;display:none;">
+						{{ trans('texts.last_30_days') }}
+					</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-body expenses-panel">
+                <div style="overflow:hidden">
+                    @if ($showExpenses)
+                        <div class="{{ $headerClass }}">
+                            {{ trans('texts.total_expenses') }}
+                        </div>
+                        <div class="expenses-div in-bold pull-right" style="color:#337ab7">
+                        </div>
+                        <div class="in-bold">
+                            @foreach ($expenses as $item)
+                                <div class="currency currency_{{ $item->currency_id ?: $account->getCurrencyId() }}" style="display:none">
+                                    {{ Utils::formatMoney($item->value, $item->currency_id) }}<br/>
+                                </div>
+                            @endforeach
+							<div class="currency currency_blank" style="display:none">
+								&nbsp;
+							</div>
+                        </div>
+                    @else
+                        <div class="{{ $headerClass }}">
+                            {{ trans('texts.average_invoice') }} (Netto)
+                        </div>
+                        <div class="average-net-div in-bold pull-right" style="color:#337ab7">
+                        </div>
+                        <div class="in-bold">
+                            @if (count($averageInvoice))
+                                @foreach ($averageInvoice as $item)
+                                    <div class="currency currency_{{ $item->currency_id ?: $account->getCurrencyId() }}" style="display:none">
+                                        {{ Utils::formatMoney($item->invoice_avg/1.19, $item->currency_id) }}<br/>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="currency currency_{{ $account->getCurrencyId() }}" style="display:none">
+                                    {{ Utils::formatMoney(0) }}
+                                </div>
+                            @endif
+							<div class="currency currency_blank" style="display:none">
+								&nbsp;
+							</div>
+                        </div>
+                    @endif
+					<div class="range-label-div {{ $footerClass }} pull-right" style="color:#337ab7;font-size:16px;display:none;">
+						{{ trans('texts.last_30_days') }}
+					</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-body outstanding-panel">
+                <div style="overflow:hidden">
+                    <div class="{{ $headerClass }}">
+                        {{ trans('texts.outstanding') }} (Netto)
+                    </div>
+                    <div class="outstanding-net-div in-bold pull-right" style="color:#337ab7">
+                    </div>
+                    <div class="in-bold">
+                        @if (count($balances))
+                            @foreach ($balances as $item)
+                                <div class="currency currency_{{ $item->currency_id ?: $account->getCurrencyId() }}" style="display:none">
+                                    {{ Utils::formatMoney($item->value/1.19, $item->currency_id) }}<br/>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="currency currency_{{ $account->getCurrencyId() }}" style="display:none">
+                                {{ Utils::formatMoney(0) }}
+                            </div>
+                        @endif
+						<div class="currency currency_blank" style="display:none">
+							&nbsp;
+						</div>
+                    </div>
+					<div class="range-label-div {{ $footerClass }} pull-right" style="color:#337ab7;font-size:16px;display:none;">
+						{{ trans('texts.last_30_days') }}
+					</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-md-4">
         <div class="panel panel-default">
@@ -373,7 +506,17 @@
 
 <div class="row">
     <div class="col-md-12">
-        <div id="progress-div" class="progress">
+        <div class="progress progress-div">
+            <div class="progress-bar progress-bar-striped active" role="progressbar"
+                aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+        </div>
+        <canvas id="chart-canvas-net" height="70px" style="background-color:white;padding:20px;display:none"></canvas>
+    </div>
+</div>
+<p>&nbsp;</p>
+<div class="row">
+    <div class="col-md-12">
+        <div class="progress progress-div">
             <div class="progress-bar progress-bar-striped active" role="progressbar"
                 aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
         </div>
