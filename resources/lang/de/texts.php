@@ -2299,7 +2299,7 @@ Sobald Sie die Beträge erhalten haben, kommen Sie bitte wieder zurück zu diese
     'default_design' => 'Standard-Layout',
     'custom_design1' => 'Rechnung',
     'custom_design2' => 'Rechnung (Ausland)',
-    'custom_design3' => 'Eigenes Layout 3',
+    'custom_design3' => 'Rechnung (Adresszusatz)',
     'custom_design4' => 'Eigenes Layout 4',
     'custom_design5' => 'Angebot',
     'custom_design6' => 'Angebot Support',
