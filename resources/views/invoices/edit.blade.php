@@ -116,7 +116,7 @@
 					<label for="client" class="control-label col-lg-4 col-sm-4"><b>{{ trans('texts.client') }}</b></label>
 					<div class="col-lg-8 col-sm-8">
                         <h4>
-                            <span data-bind="text: getClientDisplayName(ko.toJS(client()))"></span>
+                            <span data-bind="text: getClientDisplayName(ko.toJS(client()))" id="client_name"></span>
                             @if ($invoice->client->is_deleted)
                                 &nbsp;&nbsp;<div class="label label-danger">{{ trans('texts.deleted') }}</div>
                             @endif
@@ -1276,7 +1276,15 @@
 		if (!design) return;
 		var doc = generatePDF(invoice, design, true);
         var type = invoice.is_quote ? {!! json_encode(trans('texts.'.ENTITY_QUOTE)) !!} : {!! json_encode(trans('texts.'.ENTITY_INVOICE)) !!};
-		doc.save(type + '_' + $('#invoice_number').val() + '.pdf');
+        var name = $('#invoice_number').val()+'_'+$('#client_name').text()+'_'+$('#invoice_date').val();
+        name = name.replaceAll('-', '_').replaceAll(' ', '_');
+        if( type == 'Rechnung' ) {
+			doc.save(name + '.pdf');
+		}else if( type == 'Angebot' ){
+			doc.save( $('#invoice_design_id option:selected' ).text() + '_' + name + '.pdf');
+		}else{
+			doc.save(type + '_' + name + '.pdf');
+		}
 	}
 
     function onRecurrClick() {
